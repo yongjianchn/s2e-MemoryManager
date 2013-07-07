@@ -190,7 +190,7 @@ void BaseInstructions::killState(S2EExecutionState *state)
     }
 
     //Kill the current state
-    s2e()->getMessagesStream(state) << "Killing state "  << state->getID() << '\n';
+    s2e()->getWarningsStream(state) << "Killing state "  << state->getID() << '\n';
     std::ostringstream os;
     os << "State was terminated by opcode\n"
        << "            message: \"" << message << "\"\n"

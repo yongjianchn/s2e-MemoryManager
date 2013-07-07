@@ -25,18 +25,12 @@ private:
 	//m_plugin
 	FunctionMonitor *m_functionMonitor;
 	RawMonitor *m_RawMonitor;
-	ModuleExecutionDetector *m_ModuleExecutionDetector;
 	//m_connect
 	sigc::connection m_onTranslateInstruction;
 	sigc::connection m_onModuleLoad;
 	//config
 	bool m_terminateOnBugs;
-	bool m_detectOnly__kmalloc_ip_options_get;
-	bool m_detectOnlyMemcpy_ip_options_get;
 	bool m_getParFromStack;
-	uint64_t m_pc_ip_options_get_call___kmalloc;
-	uint64_t m_pc___kmalloc_return_ip_options_get;
-	uint64_t m_pc_rep_movsl_ip_options_get;
 	uint64_t m_pc___kmalloc;
 public:
 	void initialize();
@@ -64,8 +58,6 @@ public:
 	void onModuleLoad(S2EExecutionState* state,
 					   const ModuleDescriptor& mdsc);
 public:
-	void onFunctionCall_fro(S2EExecutionState *state, uint64_t pc);
-	void onFunctionReturn_fro(S2EExecutionState *state, uint64_t pc);
 	void onFunctionCall(S2EExecutionState*,FunctionMonitorState*);
 	void onFunctionReturn(S2EExecutionState*,bool);
 	void onMemcpyExecute(S2EExecutionState *state, uint64_t pc);
@@ -75,7 +67,7 @@ public:
 	klee::ref<klee::Expr> getArgValue8(S2EExecutionState* state);
 	klee::ref<klee::Expr> getArgValue12(S2EExecutionState* state);
 	klee::ref<klee::Expr> getArgValue16(S2EExecutionState* state);
-	bool check___kmalloc(uint32_t address, klee::ref<klee::Expr> size, S2EExecutionState *state);
+	bool check___kmalloc_size(klee::ref<klee::Expr> size, S2EExecutionState *state);
 	bool check_rep(uint32_t edi, klee::ref<klee::Expr> ecx, S2EExecutionState *state);
 	
 	void grant(void);
