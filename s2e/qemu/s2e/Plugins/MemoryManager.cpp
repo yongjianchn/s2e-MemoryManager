@@ -83,7 +83,7 @@ void MemoryManager::onTranslateInstructionStart(
 void MemoryManager::onModuleLoad(S2EExecutionState* state,
 								 const ModuleDescriptor& module)
 {
-	s2e()->getMessagesStream() << "---onModuleLoad" << '\n';
+	s2e()->getWarningsStream() << "---onModuleLoad" << '\n';
 	uint64_t wantedPc = m_pc___kmalloc;
 	uint64_t wantedCr3 = 0;
 	FunctionMonitor::CallSignal *cs = m_functionMonitor->getCallSignal(state, wantedPc, wantedCr3);
@@ -92,7 +92,7 @@ void MemoryManager::onModuleLoad(S2EExecutionState* state,
 
 void MemoryManager::onFunctionCall(S2EExecutionState* state, FunctionMonitorState *fns)
 {
-	s2e()->getMessagesStream() << "---onFunctionCall" << '\n';
+	//s2e()->getMessagesStream() << "---onFunctionCall" << '\n';
 	
 	if(m_getParFromStack)
 	{
@@ -110,10 +110,12 @@ void MemoryManager::onFunctionCall(S2EExecutionState* state, FunctionMonitorStat
 		s2e()->getWarningsStream() << "=============================================" << '\n';
 		s2e()->getWarningsStream() << "KMALLOCSYMBOLIC: kmalloc size is symbolic" << '\n';
 		s2e()->getWarningsStream() << "=============================================" << '\n';
+
+		s2e()->getWarningsStream() << "分配的size表达式(如果是数，那么是16进制)：" << size << '\n';
 		//打印完整路径约束
 		printConstraintExpr(state);
 	}
-	s2e()->getMessagesStream() << "分配的size表达式(如果是数，那么是16进制)：" << size << '\n';
+	//s2e()->getMessagesStream() << "分配的size表达式(如果是数，那么是16进制)：" << size << '\n';
 	
 	//检测分配的size
 	check___kmalloc_size(size,state);
@@ -125,10 +127,10 @@ void MemoryManager::onFunctionCall(S2EExecutionState* state, FunctionMonitorStat
 
 void MemoryManager::onFunctionReturn(S2EExecutionState* state,bool test)
 {
-	s2e()->getMessagesStream() << "---onFunctionReturn" << '\n';
+	//s2e()->getMessagesStream() << "---onFunctionReturn" << '\n';
 	//get address
 	state->readCpuRegisterConcrete(CPU_OFFSET(regs[R_EAX]),&address , 4);
-	s2e()->getMessagesStream() << "分配的address （eax）:" << hexval(address) << '\n';
+	//s2e()->getMessagesStream() << "分配的address （eax）:" << hexval(address) << '\n';
 	//check?
 	//因为s2e本身的机制，在此处得到的分配长度size会是具体化过的，
 	//所以不能在此处检测分配的size，应当在调用的时候进行检测
@@ -179,7 +181,7 @@ void MemoryManager::grant()
 {
 	m_grantedMemory.address = address;
 	m_grantedMemory.size = size;
-	s2e()->getMessagesStream() << "---grant Memory map address: " << hexval(address) << " size: " << size << '\n';
+	s2e()->getWarningsStream() << "---grant Memory map address: " << hexval(address) << " size: " << size << '\n';
 	memory_granted_expression.push_back(m_grantedMemory);
 }
 
@@ -231,8 +233,8 @@ bool MemoryManager::check___kmalloc_size(klee::ref<klee::Expr> size, S2EExecutio
 			s2e()->getExecutor()->getSymbolicSolution(*state, inputs);
 			
 			s2e()->getWarningsStream() << "======================================================" << '\n';
-			//s2e()->getWarningsStream() << "BUG:on this condition __kmalloc size will <= 0" << '\n';
-			s2e()->getWarningsStream() << "BUG:on this condition __kmalloc size will = 0" << '\n';
+			s2e()->getWarningsStream() << "BUG:on this condition __kmalloc size will <= 0" << '\n';
+			//s2e()->getWarningsStream() << "BUG:on this condition __kmalloc size will = 0" << '\n';
 			s2e()->getWarningsStream() << "Condition: " << '\n';
 			
 			for (it = inputs.begin(); it != inputs.end(); ++it) {
@@ -297,8 +299,8 @@ bool MemoryManager::check___kmalloc_size(klee::ref<klee::Expr> size, S2EExecutio
 			isok = false;
 			if(m_terminateOnBugs)
 			{
-				//s2e()->getExecutor()->terminateStateEarly(*state, "Killed by MemoryManager: __kmalloc size is not valid[size<=0]\n");
-				s2e()->getExecutor()->terminateStateEarly(*state, "Killed by MemoryManager: __kmalloc size is not valid[size=0]\n");
+				s2e()->getExecutor()->terminateStateEarly(*state, "Killed by MemoryManager: __kmalloc size is not valid[size <= 0]\n");
+				//s2e()->getExecutor()->terminateStateEarly(*state, "Killed by MemoryManager: __kmalloc size is not valid[size = 0]\n");
 			}
 		}
 		
